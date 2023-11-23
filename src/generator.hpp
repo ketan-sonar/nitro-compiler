@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <ios>
 #include <iostream>
 #include <sstream>
 #include <unordered_map>
@@ -41,7 +42,7 @@ public:
 
                 size_t offset = gen->m_stack_size - gen->vars[ident].stack_loc;
                 std::stringstream reg;
-                reg << "[sp, #0x" << offset << "0]";
+                reg << "[sp, #0x" << std::hex << offset << "]";
                 gen->m_output << "    ldr X0, " << reg.str() << "\n";
                 gen->push("X0");
             }
@@ -91,6 +92,7 @@ public:
             generate_stmt(stmt);
         }
 
+        // exit the program with 0 at the end
         m_output << "\n"
                  << "    mov X0, #0\n"
                  << "    mov X16, #1\n"
