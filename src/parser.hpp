@@ -20,20 +20,6 @@ struct NodeExpr {
     std::variant<NodeExprIntLit, NodeExprIdent> var;
 };
 
-struct BinExprAdd {
-    NodeExpr lhs;
-    NodeExpr rhs;
-};
-
-struct BinExprMul {
-    NodeExpr lhs;
-    NodeExpr rhs;
-};
-
-struct BinExpr {
-    std::variant<BinExprAdd, BinExprMul> var;
-};
-
 struct NodeStmtExit {
     NodeExpr expr;
 };
@@ -43,8 +29,12 @@ struct NodeStmtLet {
     NodeExpr expr;
 };
 
+struct NodeStmtPrint {
+    NodeExpr expr;
+};
+
 struct NodeStmt {
-    std::variant<NodeStmtExit, NodeStmtLet> var;
+    std::variant<NodeStmtExit, NodeStmtLet, NodeStmtPrint> var;
 };
 
 struct NodeProg {
@@ -139,6 +129,45 @@ public:
                 {
                     consume();
                     return NodeStmt { .var = stmt_let };
+                } else {
+                    std::cerr << "ERROR: `;` expected\n";
+                    exit(EXIT_FAILURE);
+                }
+            } else if (peek().value().type == TokenType::Print) {
+                consume();
+                NodeStmtPrint stmt_print;
+
+                if (peek().has_value() &&
+                    peek().value().type == TokenType::LParen)
+                {
+                    consume();
+                } else {
+                    std::cerr << "ERROR: `(` expected\n";
+                    exit(EXIT_FAILURE);
+                }
+
+                auto expr_node = parse_expr();
+                if (expr_node.has_value()) {
+                    stmt_print.expr = expr_node.value();
+                } else {
+                    std::cerr << "ERROR: `expression` expected\n";
+                    exit(EXIT_FAILURE);
+                }
+
+                if (peek().has_value() &&
+                    peek().value().type == TokenType::RParen)
+                {
+                    consume();
+                } else {
+                    std::cerr << "ERROR: `)` expected\n";
+                    exit(EXIT_FAILURE);
+                }
+
+                if (peek().has_value() &&
+                    peek().value().type == TokenType::SemiColon)
+                {
+                    consume();
+                    return NodeStmt { .var = stmt_print };
                 } else {
                     std::cerr << "ERROR: `;` expected\n";
                     exit(EXIT_FAILURE);

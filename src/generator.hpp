@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdlib>
 #include <ios>
 #include <iostream>
@@ -40,9 +41,9 @@ public:
                     exit(EXIT_FAILURE);
                 }
 
-                size_t offset = gen->m_stack_size - gen->vars[ident].stack_loc;
+                size_t offset = gen->m_stack_size - gen->vars[ident].stack_loc - 1;
                 std::stringstream reg;
-                reg << "[sp, #0x" << std::hex << offset << "]";
+                reg << "[sp, #0x" << std::hex << offset*16 << "]";
                 gen->m_output << "    ldr X0, " << reg.str() << "\n";
                 gen->push("X0");
             }
@@ -76,10 +77,22 @@ public:
                     ident,
                     Var { .stack_loc = gen->m_stack_size },
                 });
+                ++gen->m_stack_size;
+            }
+
+            void operator()(const NodeStmtPrint &stmt) {
+                // static_assert(false, "not implemented!");
+
+                gen->generate_expr(stmt.expr);
+                gen->pop("X0");
+                gen->m_output << "    mov X0, #1\n"
+                              << "    adr X1, #10\n"
+                              << "    mov X16, #" << 0 << "\n"
+                              << "    svc #0x80\n";
             }
         };
 
-        StmtVisitor visitor{.gen = this};
+        StmtVisitor visitor { .gen = this };
         std::visit(visitor, stmt.var);
     }
 
@@ -96,7 +109,7 @@ public:
         m_output << "\n"
                  << "    mov X0, #0\n"
                  << "    mov X16, #1\n"
-                 << "    svc #0\n";
+                 << "    svc #0x80\n";
     }
 
     std::string get_string() const { return m_output.str(); }

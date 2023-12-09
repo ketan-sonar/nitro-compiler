@@ -15,6 +15,7 @@ enum class TokenType {
     Ident,
     Let,
     Eq,
+    Print,
 };
 
 struct Token {
@@ -40,6 +41,8 @@ inline std::string token_to_string(const Token &token) {
             return "Let";
         case TokenType::Eq:
             return "Eq";
+        case TokenType::Print:
+            return "Print";
         default:
             return "Invalid";
     }
@@ -67,6 +70,8 @@ public:
                     tokens.push_back({ .type = TokenType::Exit });
                 } else if (buf == "let") {
                     tokens.push_back({ .type = TokenType::Let });
+                } else if (buf == "print") {
+                    tokens.push_back({ .type = TokenType::Print });
                 } else {
                     tokens.push_back({ .type = TokenType::Ident, .value = buf });
                 }
